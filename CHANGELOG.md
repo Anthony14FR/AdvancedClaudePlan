@@ -5,6 +5,11 @@ follows [Keep a Changelog](https://keepachangelog.com/) and
 [Semantic Versioning](https://semver.org/). The extension is pre-1.0 (**Beta**) and
 published on the Marketplace pre-release channel.
 
+## [0.10.2] - 2026-07-18
+
+### Changed
+- Marketplace listing metadata.
+
 ## [0.10.1] - 2026-07-17
 
 ### Added

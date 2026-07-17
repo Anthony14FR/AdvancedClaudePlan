@@ -1,0 +1,8 @@
+{
+  "description": "Readable viewer, annotations and feedback loop for Claude Code's plan mode.",
+  "command.start.title": "Advanced Claude Plan: Start local server",
+  "command.show.title": "Advanced Claude Plan: Show panel",
+  "command.toggle.title": "Advanced Claude Plan: Show / hide panel",
+  "command.configureHook.title": "Advanced Claude Plan: Configure Claude Code hook",
+  "config.port.description": "Port of the local server that receives plans from the Claude Code hook."
+}

@@ -1,0 +1,36 @@
+{
+  "name": "claude-plan-viewer",
+  "displayName": "Advanced Claude Plan",
+  "description": "%description%",
+  "version": "0.9.6",
+  "publisher": "tompitoun",
+  "license": "MIT",
+  "icon": "logo-128.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Anthony14FR/AdvancedClaudePlan"
+  },
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["AI", "Other"],
+  "keywords": ["claude", "claude code", "plan mode", "agent", "code review", "annotations"],
+  "main": "./extension.js",
+  "activationEvents": ["onStartupFinished"],
+  "contributes": {
+    "commands": [
+      { "command": "planViewer.start", "title": "%command.start.title%" },
+      { "command": "planViewer.show", "title": "%command.show.title%" },
+      { "command": "planViewer.toggle", "title": "%command.toggle.title%" },
+      { "command": "planViewer.configureHook", "title": "%command.configureHook.title%" }
+    ],
+    "configuration": {
+      "title": "Advanced Claude Plan",
+      "properties": {
+        "planViewer.port": {
+          "type": "number",
+          "default": 4756,
+          "description": "%config.port.description%"
+        }
+      }
+    }
+  }
+}

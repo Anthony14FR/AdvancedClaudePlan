@@ -1,0 +1,8 @@
+{
+  "description": "Affichage lisible, annotations et retour structuré pour le mode plan de Claude Code.",
+  "command.start.title": "Advanced Claude Plan : démarrer le serveur local",
+  "command.show.title": "Advanced Claude Plan : afficher le panneau",
+  "command.toggle.title": "Advanced Claude Plan : afficher / masquer le panneau",
+  "command.configureHook.title": "Advanced Claude Plan : configurer le hook Claude Code",
+  "config.port.description": "Port du serveur local qui reçoit les plans depuis le hook Claude Code."
+}

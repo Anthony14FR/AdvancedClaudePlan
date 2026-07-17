@@ -2,7 +2,7 @@
   "name": "claude-plan-viewer",
   "displayName": "Advanced Claude Plan",
   "description": "%description%",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "publisher": "tompitoun",
   "license": "MIT",
   "icon": "assets/logo-128.png",
@@ -10,6 +10,10 @@
     "type": "git",
     "url": "https://github.com/Anthony14FR/AdvancedClaudePlan"
   },
+  "bugs": {
+    "url": "https://github.com/Anthony14FR/AdvancedClaudePlan/issues"
+  },
+  "qna": false,
   "engines": { "vscode": "^1.85.0" },
   "categories": ["AI", "Other"],
   "keywords": ["claude", "claude code", "plan mode", "agent", "code review", "annotations"],

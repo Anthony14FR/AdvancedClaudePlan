@@ -1,0 +1,37 @@
+name: Bug report
+description: Report a problem with Advanced Claude Plan
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for taking the time to report a bug.
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: A clear description of the bug and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: Advanced Claude Plan version, VS Code version, and operating system.
+      placeholder: "Advanced Claude Plan 0.10.x · VS Code 1.x · Windows/macOS/Linux"
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Logs or screenshots
+      description: Any relevant error output or screenshots (optional).

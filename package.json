@@ -2,7 +2,7 @@
   "name": "claude-plan-viewer",
   "displayName": "Advanced Claude Plan",
   "description": "%description%",
-  "version": "0.9.6",
+  "version": "0.10.0",
   "publisher": "tompitoun",
   "license": "MIT",
   "icon": "logo-128.png",

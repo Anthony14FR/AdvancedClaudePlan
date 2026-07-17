@@ -10,8 +10,54 @@ let statusItem;
 let pendingResponse = null;
 let currentPlan = null;
 let currentLang = null;
+let boundPort = null;
 
 function isFr() { return /^fr/i.test(vscode.env.language || ''); }
+
+function registryPath() {
+  return path.join(os.homedir(), '.claude', '.advanced-claude-plan-registry.json');
+}
+
+function workspacePath() {
+  const folders = vscode.workspace.workspaceFolders;
+  return folders && folders.length ? folders[0].uri.fsPath : null;
+}
+
+function isAlive(pid) {
+  try { process.kill(pid, 0); return true; } catch (e) { return e.code === 'EPERM'; }
+}
+
+function readRegistry() {
+  try {
+    const r = JSON.parse(fs.readFileSync(registryPath(), 'utf8'));
+    return r && typeof r.instances === 'object' && r.instances ? r.instances : {};
+  } catch (e) { return {}; }
+}
+
+function writeRegistry(instances) {
+  try {
+    const p = registryPath();
+    fs.mkdirSync(path.dirname(p), { recursive: true });
+    const tmp = p + '.' + process.pid + '.tmp';
+    fs.writeFileSync(tmp, JSON.stringify({ instances }, null, 2));
+    fs.renameSync(tmp, p);
+  } catch (e) {}
+}
+
+function registerInstance() {
+  const instances = readRegistry();
+  for (const k of Object.keys(instances)) {
+    if (!instances[k] || !isAlive(Number(k))) delete instances[k];
+  }
+  instances[String(process.pid)] = { workspace: workspacePath(), port: boundPort, pid: process.pid };
+  writeRegistry(instances);
+}
+
+function unregisterInstance() {
+  const instances = readRegistry();
+  delete instances[String(process.pid)];
+  writeRegistry(instances);
+}
 
 function activate(context) {
   context.subscriptions.push(
@@ -233,7 +279,7 @@ function startServer(context) {
     panel.reveal(vscode.ViewColumn.Beside);
     return;
   }
-  const port = vscode.workspace.getConfiguration('planViewer').get('port', 4756);
+  const basePort = vscode.workspace.getConfiguration('planViewer').get('port', 4756);
   server = http.createServer((req, res) => {
     if (req.method === 'POST' && req.url === '/plan') {
       let body = '';
@@ -259,14 +305,35 @@ function startServer(context) {
     res.writeHead(404);
     res.end();
   });
-  server.listen(port, '127.0.0.1', () => {
-    const msg = isFr() ? `Advanced Claude Plan actif (port ${port})` : `Advanced Claude Plan active (port ${port})`;
+  const candidates = [];
+  for (let i = 0; i < 20; i++) candidates.push(basePort + i);
+  let attemptIdx = 0;
+  let listening = false;
+
+  const tryListen = () => {
+    if (attemptIdx < candidates.length) server.listen(candidates[attemptIdx], '127.0.0.1');
+    else server.listen(0, '127.0.0.1');
+  };
+
+  server.on('listening', () => {
+    listening = true;
+    boundPort = server.address().port;
+    registerInstance();
+    const msg = isFr() ? `Advanced Claude Plan actif (port ${boundPort})` : `Advanced Claude Plan active (port ${boundPort})`;
     vscode.window.setStatusBarMessage(msg, 4000);
   });
+
   server.on('error', err => {
+    if (!listening && err && err.code === 'EADDRINUSE') {
+      attemptIdx++;
+      tryListen();
+      return;
+    }
     vscode.window.showErrorMessage(`Advanced Claude Plan: ${err.message}`);
     server = undefined;
   });
+
+  tryListen();
   ensurePanel(context);
 }
 
@@ -336,6 +403,7 @@ function respond(result) {
 }
 
 function deactivate() {
+  unregisterInstance();
   if (server) server.close();
 }
 

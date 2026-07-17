@@ -5,6 +5,15 @@ follows [Keep a Changelog](https://keepachangelog.com/) and
 [Semantic Versioning](https://semver.org/). The extension is pre-1.0 (**Beta**) and
 published on the Marketplace pre-release channel.
 
+## [0.10.0] - 2026-07-17
+
+### Added
+- **Multi-window / multi-project support.** Each VS Code window binds its own free
+  port and registers itself; the hook routes every plan to the window whose
+  workspace matches the Claude session's directory (`cwd`). No more `EADDRINUSE`
+  when a second window is open, and each plan lands in the right window. A plan
+  for a project with no open window falls back to Claude's native screen.
+
 ## [0.9.6] - 2026-07-17
 
 ### Added

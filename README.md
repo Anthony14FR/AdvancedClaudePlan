@@ -2,7 +2,7 @@
 
 > Review, annotate and approve **Claude Code** plan-mode plans in a clean VS Code panel — and send precise, structured feedback back to the agent without touching the terminal.
 
-`v0.9.6` · **Beta** · VS Code ≥ 1.85 · No dependencies · UI in 🇬🇧 / 🇫🇷 · [Version française](#francais)
+`v0.10.0` · **Beta** · VS Code ≥ 1.85 · No dependencies · UI in 🇬🇧 / 🇫🇷 · [Version française](#francais)
 
 ---
 
@@ -39,6 +39,7 @@ When Claude Code enters **plan mode**, it prints the plan in the terminal: cramp
 - It **never duplicates** an existing hook and **never corrupts** your Claude settings (it won't touch the file if it isn't valid JSON), and it keeps the hook's path correct across updates.
 
 ### Built to not get in your way
+- **Multiple VS Code windows** are supported — each gets its own port and every plan is routed to the window matching the Claude session's project.
 - Your plan **survives** hiding/showing the panel and reloading the VS Code window.
 - **Bilingual** 🇫🇷 / 🇬🇧 interface (and feedback), following your VS Code display language.
 - A **status-bar button** shows/hides the panel anytime.
@@ -123,6 +124,7 @@ Quand Claude Code passe en **mode plan**, il affiche le plan dans le terminal : 
 - Il ne **duplique jamais** un hook existant et ne **corrompt jamais** ta config Claude (il ne touche pas au fichier s'il n'est pas un JSON valide), et garde le chemin du hook correct à chaque mise à jour.
 
 ### Sans jamais te gêner
+- **Plusieurs fenêtres VS Code** supportées — chacune a son port, et chaque plan est routé vers la fenêtre correspondant au projet de la session Claude.
 - Ton plan **survit** au masquer/afficher du panneau et au rechargement de la fenêtre VS Code.
 - Interface (et retour) **bilingue** 🇫🇷 / 🇬🇧, selon la langue de VS Code.
 - Un **bouton dans la barre de statut** affiche/masque le panneau quand tu veux.

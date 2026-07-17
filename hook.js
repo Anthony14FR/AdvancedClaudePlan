@@ -1,5 +1,36 @@
 #!/usr/bin/env node
 const http = require('http');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+
+const REGISTRY = path.join(os.homedir(), '.claude', '.advanced-claude-plan-registry.json');
+
+function norm(p) {
+  return p ? p.replace(/\\/g, '/').replace(/\/+$/, '').toLowerCase() : '';
+}
+
+function resolvePort(cwd) {
+  if (process.env.PLAN_VIEWER_PORT) return Number(process.env.PLAN_VIEWER_PORT);
+  let instances = {};
+  try {
+    instances = JSON.parse(fs.readFileSync(REGISTRY, 'utf8')).instances || {};
+  } catch (e) {}
+  const list = Object.keys(instances).map(k => instances[k]).filter(e => e && e.port);
+  if (list.length === 0) return 4756;
+  const c = norm(cwd);
+  let best = null, bestLen = -1;
+  for (const e of list) {
+    const ws = norm(e.workspace);
+    if (!ws) continue;
+    if (c === ws || c.startsWith(ws + '/') || ws.startsWith(c + '/')) {
+      if (ws.length > bestLen) { best = e; bestLen = ws.length; }
+    }
+  }
+  if (best) return best.port;
+  if (list.length === 1 && !norm(list[0].workspace)) return list[0].port;
+  return null;
+}
 
 let input = '';
 process.stdin.on('data', chunk => (input += chunk));
@@ -12,17 +43,25 @@ process.stdin.on('end', () => {
   }
 
   const plan = data.tool_input && data.tool_input.plan ? data.tool_input.plan : '';
-  const payload = JSON.stringify({ plan, session_id: data.session_id });
-  const port = process.env.PLAN_VIEWER_PORT || 4756;
+  const cwd = data.cwd || process.cwd();
+  const payload = JSON.stringify({ plan, session_id: data.session_id, cwd });
 
   const MAX_ATTEMPTS = 60;
   const RETRY_DELAY = 500;
   let attempts = 0;
   let connected = false;
+  let everConnected = false;
 
   function attempt() {
     attempts++;
     connected = false;
+    const port = resolvePort(cwd);
+    if (port == null) {
+      if (everConnected && attempts < MAX_ATTEMPTS) { setTimeout(attempt, RETRY_DELAY); return; }
+      process.exit(0);
+      return;
+    }
+
     const req = http.request(
       {
         hostname: '127.0.0.1',
@@ -58,12 +97,13 @@ process.stdin.on('end', () => {
     );
 
     req.on('socket', socket => {
-      socket.on('connect', () => { connected = true; });
+      socket.on('connect', () => { connected = true; everConnected = true; });
     });
 
     req.on('error', err => {
-      if (attempts === 1 && !connected && err && err.code === 'ECONNREFUSED') {
+      if (attempts === 1 && !everConnected && err && err.code === 'ECONNREFUSED') {
         process.exit(0);
+        return;
       }
       if (attempts < MAX_ATTEMPTS) {
         setTimeout(attempt, RETRY_DELAY);

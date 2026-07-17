@@ -1,7 +1,11 @@
 .vscode/**
 .claude/**
+.github/**
+.git/**
 **/*.vsix
 node_modules/**
 .gitignore
-logo.png
-icon.png
+test/**
+test1/**
+assets/logo.png
+assets/icon.png

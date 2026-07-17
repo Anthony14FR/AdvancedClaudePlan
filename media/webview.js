@@ -1,3 +1,9 @@
+/**
+ * @file Webview client script: renders the plan (Markdown + syntax highlighting),
+ * handles text-selection annotations and the context menu, drives the setup screen,
+ * and posts approve/feedback decisions back to the extension.
+ */
+
 const vscode = acquireVsCodeApi();
 const emptyEl = document.getElementById('empty');
 const contentEl = document.getElementById('content');

@@ -5,6 +5,17 @@ follows [Keep a Changelog](https://keepachangelog.com/) and
 [Semantic Versioning](https://semver.org/). The extension is pre-1.0 (**Beta**) and
 published on the Marketplace pre-release channel.
 
+## [0.11.0] - 2026-10-01
+
+### Changed
+- **Redesigned plan rendering.** Editorial title, plan header (sections, steps,
+  files, reading time, task progress), numbered sections, step timeline for
+  ordered lists, GitHub-style callouts (`> [!NOTE]`, `[!WARNING]`…), code blocks
+  with language header and copy button, file-path chips, refined tables and task
+  lists, sticky outline with scroll-spy on wide panels and a reading progress bar.
+- **Bundled fonts**: Inter for text and JetBrains Mono for code (SIL OFL 1.1),
+  so plans render identically on macOS, Windows and Linux.
+
 ## [0.10.2] - 2026-07-18
 
 ### Changed

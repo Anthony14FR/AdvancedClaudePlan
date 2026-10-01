@@ -17,6 +17,8 @@ When Claude Code enters **plan mode**, it prints the plan in the terminal: cramp
 ### Read plans, not terminal dumps
 - **Full Markdown rendering** — headings, nested lists, tables, task lists, blockquotes, links and inline formatting, laid out to actually be read.
 - **Syntax-highlighted code blocks**, with the language **detected automatically** when the plan doesn't specify one.
+- **Plan overview at a glance** — sections, steps, files touched, reading time and task progress, plus a sticky outline on wide panels.
+- **Callouts** (`> [!NOTE]`, `[!WARNING]`…), step timelines, file-path chips and one-click code copy.
 - A clean **light theme** in Claude's colors.
 
 ### Annotate like a code review
@@ -67,6 +69,8 @@ Quand Claude Code passe en **mode plan**, il affiche le plan dans le terminal : 
 ### Lire des plans, pas des dumps de terminal
 - **Rendu Markdown complet** — titres, listes imbriquées, tables, task lists, citations, liens et formatage inline, mis en page pour être vraiment lus.
 - **Blocs de code colorés**, avec le langage **détecté automatiquement** quand le plan ne le précise pas.
+- **Vue d'ensemble du plan** — sections, étapes, fichiers touchés, temps de lecture et progression des tâches, plus un sommaire fixe sur les panneaux larges.
+- **Encadrés** (`> [!NOTE]`, `[!WARNING]`…), frise d'étapes, chips de fichiers et copie du code en un clic.
 - Un **thème clair** épuré aux couleurs de Claude.
 
 ### Annoter comme une revue de code

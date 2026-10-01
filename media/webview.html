@@ -2,6 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
+<link rel="stylesheet" href="{{fontsCssUri}}">
 <link rel="stylesheet" href="{{hljsCssUri}}">
 <link rel="stylesheet" href="{{cssUri}}">
 </head>
@@ -21,17 +22,32 @@
   </div>
 </div>
 <div id="content" class="hidden">
-  <div id="hint">Sélectionne du texte dans le plan pour le <b>commenter</b>, proposer un <b>remplacement</b> ou le <b>supprimer</b>.</div>
-  <div id="markdown"></div>
-  <div id="annotations" class="hidden">
-    <div class="ann-head">Annotations (<span id="ann-count">0</span>)</div>
-    <div id="ann-list"></div>
+  <div id="progress"><span id="progress-bar"></span></div>
+  <div id="hint">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h3"/><path d="M20 7V4h-3"/><path d="M4 17v3h3"/><path d="M20 17v3h-3"/><path d="M9 12h6"/></svg>
+    <span id="hint-text">Sélectionne du texte dans le plan pour le <b>commenter</b>, proposer un <b>remplacement</b> ou le <b>supprimer</b>.</span>
+  </div>
+  <div id="layout">
+    <nav id="outline" class="hidden">
+      <div class="outline-head" id="outline-head">Sommaire</div>
+      <ul id="outline-list"></ul>
+    </nav>
+    <main id="doc">
+      <header id="plan-meta"></header>
+      <article id="markdown"></article>
+      <section id="annotations" class="hidden">
+        <div class="ann-head"><span id="ann-head-label">Annotations</span><span class="ann-count" id="ann-count">0</span></div>
+        <div id="ann-list"></div>
+      </section>
+    </main>
   </div>
   <div id="actions">
-    <textarea id="feedback" placeholder="Retour général à envoyer à Claude pour affiner le plan… (optionnel si tu as des annotations)"></textarea>
-    <div id="buttons">
-      <button id="send">Renvoyer avec ce retour</button>
-      <button id="approve">Approuver le plan</button>
+    <div class="actions-inner">
+      <textarea id="feedback" placeholder="Retour général à envoyer à Claude pour affiner le plan… (optionnel si tu as des annotations)"></textarea>
+      <div id="buttons">
+        <button id="send">Renvoyer avec ce retour</button>
+        <button id="approve">Approuver le plan</button>
+      </div>
     </div>
   </div>
 </div>

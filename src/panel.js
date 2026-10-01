@@ -44,6 +44,7 @@ function create(context, handlers) {
       .replace('{{cssUri}}', uri('media/webview.css'))
       .replace('{{jsUri}}', uri('media/webview.js'))
       .replace('{{hljsUri}}', uri('media/vendor/highlight.min.js'))
+      .replace('{{fontsCssUri}}', uri('media/fonts/fonts.css'))
       .replace('{{hljsCssUri}}', uri('media/vendor/highlight.css'))
       .replace('{{hookConfigured}}', String(hookConfig.isHookConfigured()));
   }

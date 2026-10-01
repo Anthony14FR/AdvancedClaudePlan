@@ -8,7 +8,11 @@ const vscode = acquireVsCodeApi();
 const emptyEl = document.getElementById('empty');
 const contentEl = document.getElementById('content');
 const markdownEl = document.getElementById('markdown');
-const hintEl = document.getElementById('hint');
+const hintEl = document.getElementById('hint-text');
+const metaEl = document.getElementById('plan-meta');
+const outlineEl = document.getElementById('outline');
+const outlineListEl = document.getElementById('outline-list');
+const progressBar = document.getElementById('progress-bar');
 const feedbackEl = document.getElementById('feedback');
 const sendBtn = document.getElementById('send');
 const approveBtn = document.getElementById('approve');
@@ -67,7 +71,16 @@ const STRINGS = {
     setupBtn: 'Configurer automatiquement',
     setupBusy: 'Configuration…',
     setupDoneTitle: 'Hook ajouté ✓',
-    setupDoneText: 'Relance ta session « claude » pour l\'activer. Le prochain plan s\'affichera ici.'
+    setupDoneText: 'Relance ta session « claude » pour l\'activer. Le prochain plan s\'affichera ici.',
+    outline: 'Sommaire', annotations: 'Annotations',
+    eyebrow: 'Plan Claude Code', received: t => 'reçu à ' + t,
+    mSections: n => n + ' section' + (n > 1 ? 's' : ''),
+    mSteps: n => n + ' étape' + (n > 1 ? 's' : ''),
+    mFiles: n => n + ' fichier' + (n > 1 ? 's' : ''),
+    mRead: n => n + ' min de lecture',
+    mTasks: (d, n) => d + '/' + n + ' tâche' + (n > 1 ? 's' : ''),
+    copyCode: 'Copier le code',
+    callout: { note: 'Note', tip: 'Astuce', important: 'Important', warning: 'Attention', caution: 'Prudence' }
   },
   en: {
     empty: 'Waiting for a Claude Code plan…',
@@ -94,7 +107,16 @@ const STRINGS = {
     setupBtn: 'Configure automatically',
     setupBusy: 'Configuring…',
     setupDoneTitle: 'Hook added ✓',
-    setupDoneText: 'Restart your "claude" session to enable it. The next plan will appear here.'
+    setupDoneText: 'Restart your "claude" session to enable it. The next plan will appear here.',
+    outline: 'Contents', annotations: 'Annotations',
+    eyebrow: 'Claude Code plan', received: t => 'received at ' + t,
+    mSections: n => n + ' section' + (n > 1 ? 's' : ''),
+    mSteps: n => n + ' step' + (n > 1 ? 's' : ''),
+    mFiles: n => n + ' file' + (n > 1 ? 's' : ''),
+    mRead: n => n + ' min read',
+    mTasks: (d, n) => d + '/' + n + ' task' + (n > 1 ? 's' : ''),
+    copyCode: 'Copy code',
+    callout: { note: 'Note', tip: 'Tip', important: 'Important', warning: 'Warning', caution: 'Caution' }
   }
 };
 
@@ -127,6 +149,11 @@ function applyI18n() {
   if (!pendingConfigure) setupBtn.textContent = t.setupBtn;
   setupDoneTitleEl.textContent = t.setupDoneTitle;
   setupDoneTextEl.textContent = t.setupDoneText;
+  document.getElementById('outline-head').textContent = t.outline;
+  document.getElementById('ann-head-label').textContent = t.annotations;
+  markdownEl.querySelectorAll('blockquote.callout').forEach(b => { b.dataset.title = t.callout[b.dataset.kind]; });
+  markdownEl.querySelectorAll('.code-copy').forEach(b => { b.title = t.copyCode; b.setAttribute('aria-label', t.copyCode); });
+  if (planActive) renderMeta();
   renderAnnList();
 }
 
@@ -162,6 +189,18 @@ const COMMENT_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" 
 const REPLACE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>';
 const DELETE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>';
 const TYPE_ICON = { comment: COMMENT_SVG, replace: REPLACE_SVG, delete: DELETE_SVG };
+const COPY_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+const CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+const META_ICONS = {
+  sections: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
+  steps: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M6 9v6"/><path d="M13 6h8"/><path d="M13 18h8"/></svg>',
+  files: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+  read: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+  tasks: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>'
+};
+const PATH_RE = /^(?:[\w.@~-]*\/)+[\w.@-]+\/?(?::\d+(?:-\d+)?)?$|^[\w.-]+\.(?:js|mjs|cjs|ts|tsx|jsx|json|md|mdx|css|scss|sass|less|html|vue|svelte|py|go|rs|java|kt|kts|php|rb|swift|dart|c|h|cpp|hpp|cs|sql|sh|ps1|yml|yaml|toml|ini|xml|gradle|lock|env|txt|prisma|graphql|proto)(?::\d+(?:-\d+)?)?$/i;
+const CALLOUT_KINDS = ['note', 'tip', 'important', 'warning', 'caution'];
+let receivedAt = null;
 
 function escapeHtml(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -178,7 +217,7 @@ function inline(s) {
   s = s.replace(/(^|[^*])\*([^*\s][^*]*?)\*/g, '$1<em>$2</em>');
   s = s.replace(/(^|[^_\w])_([^_\s][^_]*?)_/g, '$1<em>$2</em>');
   s = s.replace(/~~([^~]+)~~/g, '<del>$1</del>');
-  s = s.replace(/@@CODE(\d+)@@/g, (m, i) => '<code>' + escapeHtml(codes[i]) + '</code>');
+  s = s.replace(/@@CODE(\d+)@@/g, (m, i) => '<code' + (PATH_RE.test(codes[i].trim()) ? ' class="path"' : '') + '>' + escapeHtml(codes[i]) + '</code>');
   return s;
 }
 
@@ -198,9 +237,9 @@ function renderList(items) {
     if (!stack.length || it.level > stack[stack.length - 1].level) {
       html += it.ordered ? '<ol>' : '<ul>';
       stack.push({ ordered: it.ordered, level: it.level });
-      html += '<li data-line="' + it.line + '">' + itemInner(it);
+      html += openItem(it);
     } else {
-      html += '</li><li data-line="' + it.line + '">' + itemInner(it);
+      html += '</li>' + openItem(it);
     }
   }
   while (stack.length) {
@@ -211,13 +250,13 @@ function renderList(items) {
   return html;
 }
 
-function itemInner(it) {
+function openItem(it) {
   const task = it.text.match(/^\[([ xX])\]\s+(.*)$/);
   if (task) {
-    const checked = task[1].toLowerCase() === 'x' ? 'checked' : '';
-    return '<span class="task"><input type="checkbox" disabled ' + checked + '> ' + inline(task[2]) + '</span>';
+    const done = task[1].toLowerCase() === 'x';
+    return '<li class="task-item" data-line="' + it.line + '"><span class="task' + (done ? ' done' : '') + '"><input type="checkbox" disabled' + (done ? ' checked' : '') + '><span class="task-text">' + inline(task[2]) + '</span></span>';
   }
-  return inline(it.text);
+  return '<li data-line="' + it.line + '">' + inline(it.text);
 }
 
 function renderMarkdown(text) {
@@ -235,7 +274,7 @@ function renderMarkdown(text) {
       const buf = [];
       while (i < n && !/^```/.test(lines[i])) { buf.push(lines[i]); i++; }
       i++;
-      html += '<pre data-line="' + lineNo + '"><code class="lang-' + escapeHtml(lang) + '">' + escapeHtml(buf.join('\n')) + '</code></pre>';
+      html += '<div class="code-block" data-lang="' + escapeHtml(lang) + '"><pre data-line="' + lineNo + '"><code class="lang-' + escapeHtml(lang) + '">' + escapeHtml(buf.join('\n')) + '</code></pre><button class="code-copy" type="button" title="' + T().copyCode + '" aria-label="' + T().copyCode + '">' + COPY_SVG + '</button></div>';
       continue;
     }
     if (/^\s*$/.test(line)) { i++; continue; }
@@ -269,7 +308,14 @@ function renderMarkdown(text) {
     if (/^\s*>/.test(line)) {
       const buf = [];
       while (i < n && /^\s*>/.test(lines[i])) { buf.push(lines[i].replace(/^\s*>\s?/, '')); i++; }
-      html += '<blockquote data-line="' + lineNo + '">' + renderMarkdown(buf.join('\n')).replace(/ data-line="\d+"/g, '') + '</blockquote>';
+      const alert = buf[0].match(/^\[!(note|tip|important|warning|caution)\]\s*(.*)$/i);
+      let attrs = '';
+      if (alert) {
+        const kind = alert[1].toLowerCase();
+        attrs = ' class="callout callout-' + kind + '" data-kind="' + kind + '" data-title="' + T().callout[kind] + '"';
+        if (alert[2]) buf[0] = alert[2]; else buf.shift();
+      }
+      html += '<blockquote data-line="' + lineNo + '"' + attrs + '>' + renderMarkdown(buf.join('\n')).replace(/ data-line="\d+"/g, '') + '</blockquote>';
       continue;
     }
     if (/^\s*([-*+]|\d+\.)\s+/.test(line)) {
@@ -308,7 +354,7 @@ function highlightCode() {
     block.innerHTML = result.value;
     block.classList.add('hljs');
     const label = lang || result.language;
-    if (label) block.parentElement.setAttribute('data-lang', label);
+    if (label) block.closest('.code-block').setAttribute('data-lang', label);
   });
 }
 
@@ -330,6 +376,123 @@ function rebuildHighlights() {
     }
   }
 }
+
+function decoratePlan() {
+  const h2 = markdownEl.querySelectorAll('h2');
+  markdownEl.classList.toggle('numbered', h2.length >= 2);
+  const heads = Array.from(markdownEl.querySelectorAll('h2, h3'));
+  outlineListEl.innerHTML = '';
+  let n = 0;
+  heads.forEach((h, idx) => {
+    h.id = 'sec-' + idx;
+    const li = document.createElement('li');
+    li.className = 'lvl-' + h.tagName.charAt(1);
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.dataset.target = h.id;
+    if (h.tagName === 'H2' && h2.length >= 2) {
+      n++;
+      const num = document.createElement('span');
+      num.className = 'num';
+      num.textContent = String(n).padStart(2, '0');
+      b.appendChild(num);
+    }
+    const label = document.createElement('span');
+    label.textContent = h.textContent;
+    b.appendChild(label);
+    b.addEventListener('click', () => h.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    li.appendChild(b);
+    outlineListEl.appendChild(li);
+  });
+  outlineEl.classList.toggle('hidden', heads.length < 3);
+  renderMeta();
+  updateScroll();
+}
+
+function renderMeta() {
+  const t = T();
+  const chips = [];
+  const sections = markdownEl.querySelectorAll('h2').length;
+  if (sections) chips.push(['sections', t.mSections(sections)]);
+  const steps = markdownEl.querySelectorAll(':scope > ol > li').length;
+  if (steps) chips.push(['steps', t.mSteps(steps)]);
+  const files = new Set(Array.from(markdownEl.querySelectorAll('code.path')).map(c => c.textContent.trim().replace(/:\d+(-\d+)?$/, '')));
+  if (files.size) chips.push(['files', t.mFiles(files.size)]);
+  const words = (markdownEl.textContent.match(/\S+/g) || []).length;
+  chips.push(['read', t.mRead(Math.max(1, Math.round(words / 220)))]);
+  const tasks = markdownEl.querySelectorAll('.task input').length;
+  const done = markdownEl.querySelectorAll('.task input:checked').length;
+  metaEl.innerHTML = '';
+  const eyebrow = document.createElement('div');
+  eyebrow.className = 'meta-eyebrow';
+  eyebrow.innerHTML = '<span class="dot"></span>';
+  eyebrow.appendChild(document.createTextNode(t.eyebrow));
+  if (receivedAt) {
+    const time = document.createElement('span');
+    time.className = 'time';
+    time.textContent = '· ' + t.received(receivedAt.toLocaleTimeString(LANG, { hour: '2-digit', minute: '2-digit' }));
+    eyebrow.appendChild(time);
+  }
+  metaEl.appendChild(eyebrow);
+  const row = document.createElement('div');
+  row.className = 'meta-chips';
+  for (const [icon, text] of chips) {
+    const c = document.createElement('span');
+    c.className = 'chip';
+    c.innerHTML = META_ICONS[icon];
+    c.appendChild(document.createTextNode(text));
+    row.appendChild(c);
+  }
+  if (tasks) {
+    const c = document.createElement('span');
+    c.className = 'chip';
+    c.innerHTML = META_ICONS.tasks;
+    c.appendChild(document.createTextNode(t.mTasks(done, tasks)));
+    const bar = document.createElement('span');
+    bar.className = 'chip-bar';
+    bar.innerHTML = '<span style="width:' + Math.round(done / tasks * 100) + '%"></span>';
+    c.appendChild(bar);
+    row.appendChild(c);
+  }
+  metaEl.appendChild(row);
+}
+
+let scrollQueued = false;
+function updateScroll() {
+  scrollQueued = false;
+  if (!planActive) return;
+  const max = document.documentElement.scrollHeight - window.innerHeight;
+  progressBar.style.width = (max > 0 ? Math.min(100, window.scrollY / max * 100) : 0) + '%';
+  const buttons = outlineListEl.querySelectorAll('button');
+  if (!buttons.length) return;
+  let current = null;
+  buttons.forEach(b => {
+    const h = document.getElementById(b.dataset.target);
+    if (h && h.getBoundingClientRect().top < 120) current = b;
+  });
+  if (!current) current = buttons[0];
+  buttons.forEach(b => b.classList.toggle('active', b === current));
+}
+window.addEventListener('scroll', () => {
+  if (scrollQueued) return;
+  scrollQueued = true;
+  requestAnimationFrame(updateScroll);
+}, { passive: true });
+window.addEventListener('resize', updateScroll);
+
+markdownEl.addEventListener('click', e => {
+  const btn = e.target.closest('.code-copy');
+  if (!btn) return;
+  const code = btn.parentElement.querySelector('pre');
+  const text = code ? code.textContent : '';
+  const done = () => {
+    btn.innerHTML = CHECK_SVG;
+    btn.classList.add('done');
+    setTimeout(() => { btn.innerHTML = COPY_SVG; btn.classList.remove('done'); }, 1400);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, () => { fallbackCopy(text); done(); });
+  else { fallbackCopy(text); done(); }
+});
 
 function renderAnnList() {
   annListEl.innerHTML = '';
@@ -618,6 +781,8 @@ function buildFeedback() {
 
 function resetView() {
   planActive = false;
+  receivedAt = null;
+  progressBar.style.width = '0';
   contentEl.classList.add('hidden');
   annotations = [];
   currentRange = null;
@@ -682,12 +847,15 @@ window.addEventListener('message', event => {
     contentEl.classList.remove('hidden');
     annotations = [];
     currentRange = null;
+    receivedAt = new Date();
     markdownEl.innerHTML = renderMarkdown(msg.plan || '');
     highlightCode();
+    decoratePlan();
     rebuildHighlights();
     renderAnnList();
     feedbackEl.value = '';
     window.scrollTo(0, 0);
+    updateScroll();
   }
 });
 
